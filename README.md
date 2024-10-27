@@ -78,8 +78,8 @@ To verify if the relevant ACME challenge name has been configured correctly for 
 python main.py --hostname your_custom_hostname
 ```
 
-The script will use public DNS (8.8.8.8 or 1.1.1.1) to verify the ACME challenge name and CNAME for the provided custom hostname.
+The script will use public DNS (8.8.8.8 or 1.1.1.1) to verify the ACME challenge name and CNAME for the provided custom hostname. It will also validate if the CNAME record points to a valid target.
 
 ## Error Handling for ACME Challenge Misconfiguration
 
-If the ACME challenge is not properly configured, the script will throw an error. The error message will include the current and desired records for better troubleshooting. Ensure that the ACME challenge and CNAME records are correctly set up in your DNS configuration.
+If the ACME challenge is not properly configured, the script will throw an error. The error message will include the current and desired records for better troubleshooting. Ensure that the ACME challenge and CNAME records are correctly set up in your DNS configuration. Additionally, the script will validate if the CNAME record points to a valid target and include this information in the error message.

@@ -151,5 +151,13 @@ class TestMain(unittest.TestCase):
             main.main()
             mock_verify_acme_challenge.assert_called_with('example.com')
 
+    @mock.patch('main.dns.resolver.Resolver.resolve')
+    def test_is_valid_cname_target(self, mock_resolve):
+        mock_resolve.return_value = ['192.0.2.1']
+        self.assertTrue(main.is_valid_cname_target('cname.example.com'))
+
+        mock_resolve.side_effect = Exception('Test error')
+        self.assertFalse(main.is_valid_cname_target('cname.example.com'))
+
 if __name__ == '__main__':
     unittest.main()
