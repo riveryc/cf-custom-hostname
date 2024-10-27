@@ -2,22 +2,24 @@
 
 ## Connecting to Cloudflare
 
-To connect to Cloudflare, you need to provide an API key. You can do this by either setting an environment variable or creating a file with the API key.
+To connect to Cloudflare, you need to provide an API key and email. You can do this by either setting environment variables or creating a file with the credentials.
 
-### Using Environment Variable
+### Using Environment Variables
 
-Set the `CF_APIKEY` environment variable with your Cloudflare API key:
+Set the `CF_APIKEY` and `CF_AUTH_EMAIL` environment variables with your Cloudflare API key and email:
 
 ```sh
 export CF_APIKEY=your_cloudflare_api_key
+export CF_AUTH_EMAIL=your_cloudflare_auth_email
 ```
 
 ### Using a File
 
-Create a file named `.cloudflare_key` in the same directory as the script and add your Cloudflare API key to it:
+Create a file named `.cloudflare_cred` in the same directory as the script and add your Cloudflare API key and email to it in key-value pair format:
 
 ```sh
-echo "your_cloudflare_api_key" > .cloudflare_key
+echo "key=your_cloudflare_api_key" > .cloudflare_cred
+echo "email=your_cloudflare_auth_email" >> .cloudflare_cred
 ```
 
 ## Setting Up a Virtual Environment
