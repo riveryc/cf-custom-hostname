@@ -117,6 +117,28 @@ class TestMain(unittest.TestCase):
             mock_print.assert_called_with('Error verifying CNAME for _acme-challenge.example.com: Test error. Current record: None, Desired record: _acme-challenge.example.com')
             self.assertFalse(result)
 
+        # Test combined TXT and CNAME verification
+        mock_resolve.side_effect = [main.dns.resolver.NoAnswer, ['cname.example.com']]
+        with mock.patch('builtins.print') as mock_print:
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('No ACME challenge found for example.com. Current record: None, Desired record: _acme-challenge.example.com')
+            mock_print.assert_called_with('CNAME for _acme-challenge.example.com: cname.example.com')
+            self.assertTrue(result)
+
+        mock_resolve.side_effect = [['"test_challenge"'], main.dns.resolver.NoAnswer]
+        with mock.patch('builtins.print') as mock_print:
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('ACME challenge for example.com: "test_challenge"')
+            mock_print.assert_called_with('No CNAME found for _acme-challenge.example.com. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertTrue(result)
+
+        mock_resolve.side_effect = [main.dns.resolver.NoAnswer, main.dns.resolver.NoAnswer]
+        with mock.patch('builtins.print') as mock_print:
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('No ACME challenge found for example.com. Current record: None, Desired record: _acme-challenge.example.com')
+            mock_print.assert_called_with('No CNAME found for _acme-challenge.example.com. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertFalse(result)
+
     @mock.patch('main.verify_acme_challenge')
     @mock.patch('main.get_zone_ids')
     @mock.patch('main.get_cred')
