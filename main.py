@@ -1,6 +1,7 @@
 import requests
 import os
 import json
+import dns.resolver
 
 def get_cred():
     api_key = os.getenv("CF_APIKEY")
@@ -32,10 +33,43 @@ def get_zone_ids(api_key, auth_email):
     data = response.json()
     return [zone["id"] for zone in data["result"]]
 
+def verify_acme_challenge(hostname):
+    try:
+        resolver = dns.resolver.Resolver()
+        resolver.nameservers = ['8.8.8.8', '1.1.1.1']
+        answers = resolver.resolve(f'_acme-challenge.{hostname}', 'TXT')
+        for rdata in answers:
+            print(f'ACME challenge for {hostname}: {rdata.to_text()}')
+    except dns.resolver.NoAnswer:
+        print(f'No ACME challenge found for {hostname}')
+    except dns.resolver.NXDOMAIN:
+        print(f'Hostname {hostname} does not exist')
+    except Exception as e:
+        print(f'Error verifying ACME challenge for {hostname}: {e}')
+
+    try:
+        answers = resolver.resolve(f'_acme-challenge.{hostname}', 'CNAME')
+        for rdata in answers:
+            print(f'CNAME for _acme-challenge.{hostname}: {rdata.to_text()}')
+    except dns.resolver.NoAnswer:
+        print(f'No CNAME found for _acme-challenge.{hostname}')
+    except dns.resolver.NXDOMAIN:
+        print(f'Hostname _acme-challenge.{hostname} does not exist')
+    except Exception as e:
+        print(f'Error verifying CNAME for _acme-challenge.{hostname}: {e}')
+
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Cloudflare custom hostname verification')
+    parser.add_argument('--hostname', type=str, help='Custom hostname to verify ACME challenge')
+    args = parser.parse_args()
+
     api_key, auth_email = get_cred()
     zone_ids = get_zone_ids(api_key, auth_email)
     print("Zone IDs:", zone_ids)
+
+    if args.hostname:
+        verify_acme_challenge(args.hostname)
 
 if __name__ == "__main__":
     main()

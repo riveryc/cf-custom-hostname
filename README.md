@@ -69,3 +69,13 @@ To run the unit test, use the following command:
 ```sh
 python -m unittest test_main.py
 ```
+
+## Verifying ACME Challenge
+
+To verify if the relevant ACME challenge name has been configured correctly for a custom hostname, use the following command:
+
+```sh
+python main.py --hostname your_custom_hostname
+```
+
+The script will use public DNS (8.8.8.8 or 1.1.1.1) to verify the ACME challenge name and CNAME for the provided custom hostname.

@@ -68,5 +68,60 @@ class TestMain(unittest.TestCase):
             main.main()
             mock_print.assert_called_with('Zone IDs:', ['zone1', 'zone2'])
 
+    @mock.patch('main.dns.resolver.Resolver.resolve')
+    def test_verify_acme_challenge(self, mock_resolve):
+        mock_resolve.return_value = ['"test_challenge"']
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('ACME challenge for example.com: "test_challenge"')
+
+        mock_resolve.side_effect = main.dns.resolver.NoAnswer
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('No ACME challenge found for example.com')
+
+        mock_resolve.side_effect = main.dns.resolver.NXDOMAIN
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Hostname example.com does not exist')
+
+        mock_resolve.side_effect = Exception('Test error')
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Error verifying ACME challenge for example.com: Test error')
+
+        # Test CNAME verification
+        mock_resolve.return_value = ['cname.example.com']
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('CNAME for _acme-challenge.example.com: cname.example.com')
+
+        mock_resolve.side_effect = main.dns.resolver.NoAnswer
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('No CNAME found for _acme-challenge.example.com')
+
+        mock_resolve.side_effect = main.dns.resolver.NXDOMAIN
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Hostname _acme-challenge.example.com does not exist')
+
+        mock_resolve.side_effect = Exception('Test error')
+        with mock.patch('builtins.print') as mock_print:
+            main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Error verifying CNAME for _acme-challenge.example.com: Test error')
+
+    @mock.patch('main.verify_acme_challenge')
+    @mock.patch('main.get_zone_ids')
+    @mock.patch('main.get_cred')
+    def test_main_with_hostname(self, mock_get_cred, mock_get_zone_ids, mock_verify_acme_challenge):
+        mock_get_cred.return_value = ('test_api_key', 'test_auth_email')
+        mock_get_zone_ids.return_value = ['zone1', 'zone2']
+
+        test_args = ['main.py', '--hostname', 'example.com']
+        with mock.patch('sys.argv', test_args):
+            main.main()
+            mock_verify_acme_challenge.assert_called_with('example.com')
+
 if __name__ == '__main__':
     unittest.main()
