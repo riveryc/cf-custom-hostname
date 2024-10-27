@@ -34,29 +34,42 @@ def get_zone_ids(api_key, auth_email):
     return [zone["id"] for zone in data["result"]]
 
 def verify_acme_challenge(hostname):
+    result = True
+    current_record = None
+    desired_record = f'_acme-challenge.{hostname}'
     try:
         resolver = dns.resolver.Resolver()
         resolver.nameservers = ['8.8.8.8', '1.1.1.1']
-        answers = resolver.resolve(f'_acme-challenge.{hostname}', 'TXT')
+        answers = resolver.resolve(desired_record, 'TXT')
         for rdata in answers:
-            print(f'ACME challenge for {hostname}: {rdata.to_text()}')
+            current_record = rdata.to_text()
+            print(f'ACME challenge for {hostname}: {current_record}')
     except dns.resolver.NoAnswer:
-        print(f'No ACME challenge found for {hostname}')
+        print(f'No ACME challenge found for {hostname}. Current record: {current_record}, Desired record: {desired_record}')
+        result = False
     except dns.resolver.NXDOMAIN:
-        print(f'Hostname {hostname} does not exist')
+        print(f'Hostname {hostname} does not exist. Current record: {current_record}, Desired record: {desired_record}')
+        result = False
     except Exception as e:
-        print(f'Error verifying ACME challenge for {hostname}: {e}')
+        print(f'Error verifying ACME challenge for {hostname}: {e}. Current record: {current_record}, Desired record: {desired_record}')
+        result = False
 
     try:
-        answers = resolver.resolve(f'_acme-challenge.{hostname}', 'CNAME')
+        answers = resolver.resolve(desired_record, 'CNAME')
         for rdata in answers:
-            print(f'CNAME for _acme-challenge.{hostname}: {rdata.to_text()}')
+            current_record = rdata.to_text()
+            print(f'CNAME for {desired_record}: {current_record}')
     except dns.resolver.NoAnswer:
-        print(f'No CNAME found for _acme-challenge.{hostname}')
+        print(f'No CNAME found for {desired_record}. Current record: {current_record}, Desired record: {desired_record}')
+        result = False
     except dns.resolver.NXDOMAIN:
-        print(f'Hostname _acme-challenge.{hostname} does not exist')
+        print(f'Hostname {desired_record} does not exist. Current record: {current_record}, Desired record: {desired_record}')
+        result = False
     except Exception as e:
-        print(f'Error verifying CNAME for _acme-challenge.{hostname}: {e}')
+        print(f'Error verifying CNAME for {desired_record}: {e}. Current record: {current_record}, Desired record: {desired_record}')
+        result = False
+
+    return result
 
 def main():
     import argparse

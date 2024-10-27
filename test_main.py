@@ -77,18 +77,21 @@ class TestMain(unittest.TestCase):
 
         mock_resolve.side_effect = main.dns.resolver.NoAnswer
         with mock.patch('builtins.print') as mock_print:
-            main.verify_acme_challenge('example.com')
-            mock_print.assert_called_with('No ACME challenge found for example.com')
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('No ACME challenge found for example.com. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertFalse(result)
 
         mock_resolve.side_effect = main.dns.resolver.NXDOMAIN
         with mock.patch('builtins.print') as mock_print:
-            main.verify_acme_challenge('example.com')
-            mock_print.assert_called_with('Hostname example.com does not exist')
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Hostname example.com does not exist. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertFalse(result)
 
         mock_resolve.side_effect = Exception('Test error')
         with mock.patch('builtins.print') as mock_print:
-            main.verify_acme_challenge('example.com')
-            mock_print.assert_called_with('Error verifying ACME challenge for example.com: Test error')
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Error verifying ACME challenge for example.com: Test error. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertFalse(result)
 
         # Test CNAME verification
         mock_resolve.return_value = ['cname.example.com']
@@ -98,18 +101,21 @@ class TestMain(unittest.TestCase):
 
         mock_resolve.side_effect = main.dns.resolver.NoAnswer
         with mock.patch('builtins.print') as mock_print:
-            main.verify_acme_challenge('example.com')
-            mock_print.assert_called_with('No CNAME found for _acme-challenge.example.com')
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('No CNAME found for _acme-challenge.example.com. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertFalse(result)
 
         mock_resolve.side_effect = main.dns.resolver.NXDOMAIN
         with mock.patch('builtins.print') as mock_print:
-            main.verify_acme_challenge('example.com')
-            mock_print.assert_called_with('Hostname _acme-challenge.example.com does not exist')
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Hostname _acme-challenge.example.com does not exist. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertFalse(result)
 
         mock_resolve.side_effect = Exception('Test error')
         with mock.patch('builtins.print') as mock_print:
-            main.verify_acme_challenge('example.com')
-            mock_print.assert_called_with('Error verifying CNAME for _acme-challenge.example.com: Test error')
+            result = main.verify_acme_challenge('example.com')
+            mock_print.assert_called_with('Error verifying CNAME for _acme-challenge.example.com: Test error. Current record: None, Desired record: _acme-challenge.example.com')
+            self.assertFalse(result)
 
     @mock.patch('main.verify_acme_challenge')
     @mock.patch('main.get_zone_ids')
