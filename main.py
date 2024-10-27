@@ -94,5 +94,11 @@ def main():
         if not is_valid_cname_target(args.hostname):
             print(f'Invalid CNAME target for {args.hostname}')
 
+    print("All checks successful. Ready to implement custom hostname.")
+    proceed = input("Do you want to proceed? (yes/no): ")
+    if proceed.lower() != 'yes':
+        print("Exiting.")
+        return
+
 if __name__ == "__main__":
     main()
