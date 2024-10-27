@@ -33,6 +33,16 @@ def get_zone_ids(api_key, auth_email):
     data = response.json()
     return [zone["id"] for zone in data["result"]]
 
+def is_valid_cname_target(hostname):
+    try:
+        resolver = dns.resolver.Resolver()
+        resolver.nameservers = ['8.8.8.8', '1.1.1.1']
+        answers = resolver.resolve(hostname, 'CNAME')
+        for rdata in answers:
+            return True
+    except Exception as e:
+        return False
+
 def verify_acme_challenge(hostname):
     txt_result = True
     cname_result = True
@@ -52,18 +62,6 @@ def verify_acme_challenge(hostname):
     except Exception as e:
         txt_result = False
 
-    try:
-        answers = resolver.resolve(desired_record, 'CNAME')
-        for rdata in answers:
-            current_record = rdata.to_text()
-            print(f'CNAME for {desired_record}: {current_record}')
-    except dns.resolver.NoAnswer:
-        cname_result = False
-    except dns.resolver.NXDOMAIN:
-        cname_result = False
-    except Exception as e:
-        cname_result = False
-
     if not txt_result and not cname_result:
         print(f'No ACME challenge found for {hostname}. Current record: {current_record}, Desired record: {desired_record}')
         return False
@@ -81,6 +79,8 @@ def main():
 
     if args.hostname:
         verify_acme_challenge(args.hostname)
+        if not is_valid_cname_target(args.hostname):
+            print(f'Invalid CNAME target for {args.hostname}')
 
 if __name__ == "__main__":
     main()
