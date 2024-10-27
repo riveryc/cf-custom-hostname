@@ -34,7 +34,8 @@ def get_zone_ids(api_key, auth_email):
     return [zone["id"] for zone in data["result"]]
 
 def verify_acme_challenge(hostname):
-    result = True
+    txt_result = True
+    cname_result = True
     current_record = None
     desired_record = f'_acme-challenge.{hostname}'
     try:
@@ -45,14 +46,11 @@ def verify_acme_challenge(hostname):
             current_record = rdata.to_text()
             print(f'ACME challenge for {hostname}: {current_record}')
     except dns.resolver.NoAnswer:
-        print(f'No ACME challenge found for {hostname}. Current record: {current_record}, Desired record: {desired_record}')
-        result = False
+        txt_result = False
     except dns.resolver.NXDOMAIN:
-        print(f'Hostname {hostname} does not exist. Current record: {current_record}, Desired record: {desired_record}')
-        result = False
+        txt_result = False
     except Exception as e:
-        print(f'Error verifying ACME challenge for {hostname}: {e}. Current record: {current_record}, Desired record: {desired_record}')
-        result = False
+        txt_result = False
 
     try:
         answers = resolver.resolve(desired_record, 'CNAME')
@@ -60,16 +58,16 @@ def verify_acme_challenge(hostname):
             current_record = rdata.to_text()
             print(f'CNAME for {desired_record}: {current_record}')
     except dns.resolver.NoAnswer:
-        print(f'No CNAME found for {desired_record}. Current record: {current_record}, Desired record: {desired_record}')
-        result = False
+        cname_result = False
     except dns.resolver.NXDOMAIN:
-        print(f'Hostname {desired_record} does not exist. Current record: {current_record}, Desired record: {desired_record}')
-        result = False
+        cname_result = False
     except Exception as e:
-        print(f'Error verifying CNAME for {desired_record}: {e}. Current record: {current_record}, Desired record: {desired_record}')
-        result = False
+        cname_result = False
 
-    return result
+    if not txt_result and not cname_result:
+        print(f'No ACME challenge found for {hostname}. Current record: {current_record}, Desired record: {desired_record}')
+        return False
+    return True
 
 def main():
     import argparse
