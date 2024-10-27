@@ -62,6 +62,18 @@ def verify_acme_challenge(hostname):
     except Exception as e:
         txt_result = False
 
+    try:
+        answers = resolver.resolve(desired_record, 'CNAME')
+        for rdata in answers:
+            current_record = rdata.to_text()
+            print(f'CNAME for {desired_record}: {current_record}')
+    except dns.resolver.NoAnswer:
+        cname_result = False
+    except dns.resolver.NXDOMAIN:
+        cname_result = False
+    except Exception as e:
+        cname_result = False
+
     if not txt_result and not cname_result:
         print(f'No ACME challenge found for {hostname}. Current record: {current_record}, Desired record: {desired_record}')
         return False
