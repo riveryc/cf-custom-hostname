@@ -159,5 +159,19 @@ class TestMain(unittest.TestCase):
         mock_resolve.side_effect = Exception('Test error')
         self.assertFalse(main.is_valid_cname_target('cname.example.com'))
 
+    @mock.patch('builtins.input', side_effect=['yes'])
+    def test_main_proceed_yes(self, mock_input):
+        with mock.patch('builtins.print') as mock_print:
+            main.main()
+            mock_print.assert_any_call("All checks successful. Ready to implement custom hostname.")
+            mock_print.assert_any_call("Exiting.")
+
+    @mock.patch('builtins.input', side_effect=['no'])
+    def test_main_proceed_no(self, mock_input):
+        with mock.patch('builtins.print') as mock_print:
+            main.main()
+            mock_print.assert_any_call("All checks successful. Ready to implement custom hostname.")
+            mock_print.assert_any_call("Exiting.")
+
 if __name__ == '__main__':
     unittest.main()

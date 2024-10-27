@@ -62,6 +62,8 @@ python main.py
 
 The script will print the current zone IDs.
 
+After successful checks, the script will print "All checks successful. Ready to implement custom hostname." and prompt the user with "Do you want to proceed? (yes/no)". If the user confirms with "yes", the script proceeds to the next step. If "no", it exits.
+
 ## Running the Unit Test
 
 To run the unit test, use the following command:
