@@ -33,6 +33,23 @@ def get_zone_ids(api_key, auth_email):
     data = response.json()
     return [zone["id"] for zone in data["result"]]
 
+def get_domains(api_key, auth_email):
+    url = "https://api.cloudflare.com/client/v4/zones"
+    headers = {
+        "X-Auth-Email": auth_email,
+        "X-Auth-Key": api_key,
+        "Content-Type": "application/json"
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 400:
+        error_data = response.json()
+        if error_data["errors"][0]["code"] == 6111:
+            raise Exception("Invalid format for Authorization header")
+    if response.status_code != 200:
+        raise Exception(f"Failed to retrieve domains: {response.status_code} {response.text}")
+    data = response.json()
+    return [zone["name"] for zone in data["result"]]
+
 def is_valid_cname_target(hostname):
     try:
         resolver = dns.resolver.Resolver()
@@ -88,6 +105,9 @@ def main():
     api_key, auth_email = get_cred()
     zone_ids = get_zone_ids(api_key, auth_email)
     print("Zone IDs:", zone_ids)
+
+    domains = get_domains(api_key, auth_email)
+    print("Domains:", domains)
 
     if args.hostname:
         verify_acme_challenge(args.hostname)

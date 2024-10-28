@@ -60,7 +60,7 @@ To run the script, use the following command:
 python main.py
 ```
 
-The script will print the current zone IDs.
+The script will print the current zone IDs and domains.
 
 After successful checks, the script will print "All checks successful. Ready to implement custom hostname." and prompt the user with "Do you want to proceed? (yes/no)". If the user confirms with "yes", the script proceeds to the next step. If "no", it exits.
 
