@@ -58,15 +58,55 @@ class TestMain(unittest.TestCase):
             main.get_zone_ids(api_key, auth_email)
         self.assertTrue('Failed to retrieve zone IDs' in str(context.exception))
 
+    @mock.patch('main.requests.get')
+    def test_get_domains(self, mock_get):
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'result': [{'name': 'domain1.com'}, {'name': 'domain2.com'}]
+        }
+        mock_get.return_value = mock_response
+
+        api_key = 'test_api_key'
+        auth_email = 'test_auth_email'
+        domains = main.get_domains(api_key, auth_email)
+        self.assertEqual(domains, ['domain1.com', 'domain2.com'])
+
+        # Test when request fails
+        mock_response.status_code = 400
+        mock_response.json.return_value = {
+            "success": False,
+            "errors": [{"code": 6111, "message": "Invalid format for Authorization header"}],
+            "messages": [],
+            "result": None
+        }
+        with self.assertRaises(Exception) as context:
+            main.get_domains(api_key, auth_email)
+        self.assertTrue('Invalid format for Authorization header' in str(context.exception))
+
+        # Test when request fails with other error
+        mock_response.json.return_value = {
+            "success": False,
+            "errors": [{"code": 1234, "message": "Some other error"}],
+            "messages": [],
+            "result": None
+        }
+        with self.assertRaises(Exception) as context:
+            main.get_domains(api_key, auth_email)
+        self.assertTrue('Failed to retrieve domains' in str(context.exception))
+
     @mock.patch('main.get_zone_ids')
+    @mock.patch('main.get_domains')
     @mock.patch('main.get_cred')
-    def test_main(self, mock_get_cred, mock_get_zone_ids):
+    def test_main(self, mock_get_cred, mock_get_domains, mock_get_zone_ids):
         mock_get_cred.return_value = ('test_api_key', 'test_auth_email')
         mock_get_zone_ids.return_value = ['zone1', 'zone2']
+        mock_get_domains.return_value = ['domain1.com', 'domain2.com']
 
         with mock.patch('builtins.print') as mock_print:
             main.main()
-            mock_print.assert_called_with('Zone IDs:', ['zone1', 'zone2'])
+            mock_print.assert_any_call('Zone IDs:', ['zone1', 'zone2'])
+            mock_print.assert_any_call('Domains:', ['domain1.com', 'domain2.com'])
 
     @mock.patch('main.dns.resolver.Resolver.resolve')
     def test_verify_acme_challenge(self, mock_resolve):
